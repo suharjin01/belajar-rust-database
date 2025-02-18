@@ -37,4 +37,15 @@ mod tests {
             .idle_timeout(Duration::from_secs(60))
             .connect(url).await
     }
+
+
+    // Execute SQL
+    // Mengisi tabel "category" di dalam database "belajar_rust"
+    #[tokio::test]
+    async fn test_execute() -> Result<(), Error> {
+        let pool = get_pool().await?;
+        sqlx::query("insert into category(id, name, description) values ('A', 'Aqil', 'Contoh');")
+            .execute(&pool).await?;
+        Ok(())
+    }
 }
