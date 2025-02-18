@@ -48,4 +48,18 @@ mod tests {
             .execute(&pool).await?;
         Ok(())
     }
+
+
+    // Prepare Statement bisanya digunakan untuk menghindari SQL Injection
+    // ketika menggunakan input user
+    #[tokio::test]
+    async fn test_prepare_statement() -> Result<(), Error> {
+        let pool = get_pool().await?;
+        sqlx::query("insert into category(id, name, description) values ($1, $2, $3);")
+            .bind("B")
+            .bind("Suharjin")
+            .bind("Conto Description")
+            .execute(&pool).await?;
+        Ok(())
+    }
 }
