@@ -8,7 +8,7 @@ mod tests {
     use std::time::Duration;
 
     use futures::TryStreamExt;
-    use sqlx::{postgres::{PgPoolOptions, PgRow}, Connection, Error, PgConnection, Pool, Postgres, Row};
+    use sqlx::{postgres::{PgPoolOptions, PgRow}, prelude::FromRow, Connection, Error, PgConnection, Pool, Postgres, Row};
 
     
     #[tokio::test]
@@ -149,7 +149,7 @@ mod tests {
 
 
     // Result Mapping 
-    #[derive(Debug)]
+    #[derive(Debug, FromRow)]
     struct Category {
         id: String,
         name: String,
@@ -170,6 +170,23 @@ mod tests {
                     description: row.get("description")
                 }
             })
+            .fetch_all(&pool).await?;
+
+        for category in result {
+            println!("{:?}", category);
+        }
+
+        Ok(())
+    }
+
+
+    // Result Mapping 
+    // - Cara otomatis
+    #[tokio::test]
+    async fn test_result_mapping_automatic() -> Result<(), Error> {
+        let pool = get_pool().await?;
+
+        let result: Vec<Category> = sqlx::query_as("select * from category")
             .fetch_all(&pool).await?;
 
         for category in result {
