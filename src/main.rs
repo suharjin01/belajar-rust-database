@@ -146,4 +146,36 @@ mod tests {
 
         Ok(())
     }
+
+
+    // Result Mapping 
+    #[derive(Debug)]
+    struct Category {
+        id: String,
+        name: String,
+        description: String
+    }
+
+    // Result Mapping 
+    // - Cara manual
+    #[tokio::test]
+    async fn test_result_mapping() -> Result<(), Error> {
+        let pool = get_pool().await?;
+
+        let result: Vec<Category> = sqlx::query("select * from category")
+            .map(|row: PgRow| {
+                Category {
+                    id: row.get("id"),
+                    name: row.get("name"),
+                    description: row.get("description")
+                }
+            })
+            .fetch_all(&pool).await?;
+
+        for category in result {
+            println!("{:?}", category);
+        }
+
+        Ok(())
+    }
 }
