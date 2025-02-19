@@ -7,7 +7,8 @@ fn main() {
 mod tests {
     use std::time::Duration;
 
-    use sqlx::{postgres::PgPoolOptions, Connection, Error, PgConnection, Pool, Postgres};
+    use futures::TryStreamExt;
+    use sqlx::{postgres::{PgPoolOptions, PgRow}, Connection, Error, PgConnection, Pool, Postgres, Row};
 
     
     #[tokio::test]
@@ -60,6 +61,89 @@ mod tests {
             .bind("Suharjin")
             .bind("Conto Description")
             .execute(&pool).await?;
+        Ok(())
+    }
+
+
+    // Query SQL
+    // - Fetch Optional
+    #[tokio::test]
+    async fn test_fetch_optional() -> Result<(), Error> {
+        let pool = get_pool().await?;
+
+        let result = sqlx::query("select * from category where id = $1")
+            .bind("A")
+            .fetch_optional(&pool).await?;
+
+        if let Some(row) = result {
+            let id: String = row.get("id");
+            let name: String = row.get("name");
+            let description: String = row.get("description");
+
+            println!("id : {}, name : {}, description : {}", id, name, description)
+        } else {
+            println!("Data Is Not Found")
+        }
+
+        Ok(())
+    }
+
+
+    // - Fetch One
+    #[tokio::test]
+    async fn test_fetch_one() -> Result<(), Error> {
+        let pool = get_pool().await?;
+
+        let result: PgRow = sqlx::query("select * from category where id = $1")
+            .bind("B")
+            .fetch_one(&pool).await?;
+
+        let id: String = result.get("id");
+        let name: String = result.get("name");
+        let description: String = result.get("description");
+
+        println!("id : {}, name : {}, description : {}", id, name, description);
+
+        Ok(())
+    }
+
+
+    // - Fetch All
+    #[tokio::test]
+    async fn test_fetch_all() -> Result<(), Error> {
+        let pool = get_pool().await?;
+
+        let result: Vec<PgRow> = sqlx::query("select * from category")
+            .fetch_all(&pool).await?;
+
+        for row in result {
+            let id: String = row.get("id");
+        let name: String = row.get("name");
+        let description: String = row.get("description");
+
+        println!("id : {}, name : {}, description : {}", id, name, description);
+        }
+
+        Ok(())
+    }
+
+
+    // - Fetch Stream
+    #[tokio::test]
+    async fn test_fetch() -> Result<(), Error> {
+        let pool = get_pool().await?;
+
+        let mut result = sqlx::query("select * from category")
+            .fetch(&pool);
+
+        while let Some(row) = result.try_next().await? {
+            let id: String = row.get("id");
+            let name: String = row.get("name");
+            let description: String = row.get("description");
+
+            println!("id : {}, name : {}, description : {}", id, name, description);
+        }
+
         Ok(())
     }
 }
