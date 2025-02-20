@@ -237,4 +237,49 @@ mod tests {
 
         Ok(())
     }
+
+
+    // Transaction
+    #[tokio::test]
+    async fn test_transaction() -> Result<(), Error> {
+        let pool = get_pool().await?;
+        
+        let mut transaction = pool.begin().await?;
+
+        sqlx::query("insert into title(id, title, description, created_at, updated_at) values ($1, $2, $3, $4, $5);")
+            .bind("B")
+            .bind("Memory Management")
+            .bind("Konsep memory manajemen di Rust")
+            .bind(Local::now().naive_local())
+            .bind(Local::now().naive_local())
+            .execute(&mut *transaction).await?;
+
+        sqlx::query("insert into title(id, title, description, created_at, updated_at) values ($1, $2, $3, $4, $5);")
+            .bind("C")
+            .bind("Ownership")
+            .bind("Konsep ownership di Rust")
+            .bind(Local::now().naive_local())
+            .bind(Local::now().naive_local())
+            .execute(&mut *transaction).await?;
+
+        transaction.commit().await?;
+
+        Ok(())
+    }
+
+
+    // Auto Increment
+    #[tokio::test]
+    async fn test_auto_increment() -> Result<(), Error> {
+        let pool = get_pool().await?;
+
+        let result: PgRow = sqlx::query("insert into mentors(name) values ($1) returning id;")
+            .bind("Suharjin S.T")
+            .fetch_one(&pool).await?;
+
+        let id: i32 = result.get("id");
+        println!("Id Mentor : {}", id);
+
+        Ok(())
+    }
 }
