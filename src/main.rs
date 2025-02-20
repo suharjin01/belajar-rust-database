@@ -7,6 +7,7 @@ fn main() {
 mod tests {
     use std::time::Duration;
 
+    use chrono::{Local, NaiveDateTime};
     use futures::TryStreamExt;
     use sqlx::{postgres::{PgPoolOptions, PgRow}, prelude::FromRow, Connection, Error, PgConnection, Pool, Postgres, Row};
 
@@ -191,6 +192,47 @@ mod tests {
 
         for category in result {
             println!("{:?}", category);
+        }
+
+        Ok(())
+    }
+
+
+    // Data Type
+    #[tokio::test]
+    async fn test_insert_data_title() -> Result<(), Error> {
+        let pool = get_pool().await?;
+
+        sqlx::query("insert into title(id, title, description, created_at, updated_at) values ($1, $2, $3, $4, $5);")
+            .bind("A")
+            .bind("Borrowing")
+            .bind("Memahami konsep borrowing di Rust")
+            .bind(Local::now().naive_local())
+            .bind(Local::now().naive_local())
+            .execute(&pool).await?;
+
+        Ok(())
+    }
+
+    // Membuat struct title
+    #[derive(Debug, FromRow)]
+    struct Title {
+        id: String,
+        title: String,
+        description: String,
+        created_at: NaiveDateTime,
+        updated_at: NaiveDateTime,
+    }
+
+    #[tokio::test]
+    async fn test_result_mapping_title() -> Result<(), Error> {
+        let pool = get_pool().await?;
+
+        let result: Vec<Title> = sqlx::query_as("select * from title")
+            .fetch_all(&pool).await?;
+
+        for title in result {
+            println!("{:?}", title);
         }
 
         Ok(())
