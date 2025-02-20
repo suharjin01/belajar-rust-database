@@ -282,4 +282,24 @@ mod tests {
 
         Ok(())
     }
+
+    // Auto Increment (2)
+    #[tokio::test]
+    async fn test_auto_increment_with_transaction() -> Result<(), Error> {
+        let pool = get_pool().await?;
+        let mut transaction = pool.begin().await?;
+
+        sqlx::query("insert into mentors(name) values ($1) returning id;")
+            .bind("Suharjin S.T")
+            .execute(&mut *transaction).await?;
+
+
+        let result: PgRow = sqlx::query("select lastval() as id")
+            .fetch_one(&mut *transaction).await?;
+
+        let id: i32 = result.get_unchecked("id");
+        println!("Id Mentor : {}", id);
+
+        Ok(())
+    }
 }
